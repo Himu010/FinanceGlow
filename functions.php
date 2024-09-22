@@ -696,6 +696,44 @@ img {
 <?php
 }
 
+// Customize option
+function financeglow_customize_register($wp_customize)
+{
+    // Add a section for the Home Page Title
+    $wp_customize->add_section('financeglow_home_page_title_section', array(
+        'title' => __('Home Page Title', 'financeglow'),
+        'priority' => 30,
+    ));
+
+    // Add a setting for the Home Page Title
+    $wp_customize->add_setting('home_page_title', array(
+        'default' => '',
+        'sanitize_callback' => 'sanitize_text_field',
+    ));
+
+    // Add a control for the Home Page Title
+    $wp_customize->add_control('home_page_title_control', array(
+        'label' => __('Home Page Title', 'financeglow'),
+        'section' => 'financeglow_home_page_title_section',
+        'settings' => 'home_page_title',
+        'type' => 'text',
+    ));
+}
+add_action('customize_register', 'financeglow_customize_register');
+
+function financeglow_custom_home_title($title)
+{
+    if (is_front_page()) {
+        $home_title = get_theme_mod('home_page_title', ''); // Get the Home Page Title
+        if ($home_title) {
+            return esc_html($home_title);
+        }
+    }
+    return $title; // Fallback to the default behavior for other pages
+}
+add_filter('pre_get_document_title', 'financeglow_custom_home_title', 10);
+
+
 
 
 // Security headers
