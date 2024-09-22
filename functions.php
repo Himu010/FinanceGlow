@@ -121,31 +121,44 @@ add_action('wp_enqueue_scripts', 'financeglow_enqueue_comment_reply');
 
 
 // Create default primary menu after switching theme
-function create_default_primary_menu()
-{
-    // Check if the primary menu is already set
-    if (!has_nav_menu('primary')) {
-        // Create a new menu named "Top Menu"
-        $menu_id = wp_create_nav_menu('Top Menu');
-
-        // Define default pages or custom links to add
-        $pages = array('Home', 'About', 'Contact');
-
-        // Add pages to the menu if they exist
-        foreach ($pages as $page_title) {
-            $page = get_page_by_title($page_title);
-            if ($page) {
-                wp_add_object_to_menu($menu_id, $page->ID);
-            }
-        }
-
+function financeglow_create_default_primary_menu() {
+    // Create a new menu named "Primary Menu" (or any name you'd like)
+    $menu_name = 'Primary Menu';
+    $menu_exists = wp_get_nav_menu_object($menu_name);
+    
+    // Create the menu if it doesn't exist
+    if (!$menu_exists) {
+        $menu_id = wp_create_nav_menu($menu_name);
+        
         // Assign the new menu to the primary location
         $locations = get_theme_mod('nav_menu_locations');
         $locations['primary'] = $menu_id;
         set_theme_mod('nav_menu_locations', $locations);
+
+        // Optionally, create default pages (Home, About, Contact) if they don't exist
+        $default_pages = array(
+            'Home'    => esc_url(home_url('/')),
+            'About'   => esc_url(home_url('/about')),
+            'Contact' => esc_url(home_url('/contact'))
+        );
+
+        // Add default links to the newly created menu
+        foreach ($default_pages as $page_title => $page_url) {
+            wp_update_nav_menu_item($menu_id, 0, array(
+                'menu-item-title'   => $page_title,
+                'menu-item-url'     => $page_url, // Link to a URL
+                'menu-item-status'  => 'publish'  // Ensure the menu item is published
+            ));
+        }
+    } else {
+        // If the menu exists, assign it to the primary location
+        $locations = get_theme_mod('nav_menu_locations');
+        $locations['primary'] = $menu_exists->term_id;
+        set_theme_mod('nav_menu_locations', $locations);
     }
 }
-add_action('after_switch_theme', 'create_default_primary_menu');
+add_action('after_switch_theme', 'financeglow_create_default_primary_menu');
+
 
 // Ensure theme supports post categories and tags
 function add_category_and_tag_support()
@@ -695,43 +708,6 @@ img {
 </style>
 <?php
 }
-
-// Customize option
-function financeglow_customize_register($wp_customize)
-{
-    // Add a section for the Home Page Title
-    $wp_customize->add_section('financeglow_home_page_title_section', array(
-        'title' => __('Home Page Title', 'financeglow'),
-        'priority' => 30,
-    ));
-
-    // Add a setting for the Home Page Title
-    $wp_customize->add_setting('home_page_title', array(
-        'default' => '',
-        'sanitize_callback' => 'sanitize_text_field',
-    ));
-
-    // Add a control for the Home Page Title
-    $wp_customize->add_control('home_page_title_control', array(
-        'label' => __('Home Page Title', 'financeglow'),
-        'section' => 'financeglow_home_page_title_section',
-        'settings' => 'home_page_title',
-        'type' => 'text',
-    ));
-}
-add_action('customize_register', 'financeglow_customize_register');
-
-function financeglow_custom_home_title($title)
-{
-    if (is_front_page()) {
-        $home_title = get_theme_mod('home_page_title', ''); // Get the Home Page Title
-        if ($home_title) {
-            return esc_html($home_title);
-        }
-    }
-    return $title; // Fallback to the default behavior for other pages
-}
-add_filter('pre_get_document_title', 'financeglow_custom_home_title', 10);
 
 
 
